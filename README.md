@@ -1,5 +1,5 @@
 # Fernandez_appdevAY2627
-lab activity 0 B
+## Lab activity 0 B
 
 Laboratory Discussion: Discuss the primary challenges you encountered while setting up your native Android Java development environment and executing your initial project build. Consider specific hurdles related to installing Android Studio, configuring JDK and platform path variables (JAVA_HOME, ANDROID_HOME), resolving Gradle sync failures, downloading missing Android SDK components or build tools, and accepting SDK licenses. Additionally, examine challenges faced when launching Android Virtual Devices (AVDs) or configuring physical Android devices with USB Debugging enabled.
 
