@@ -13,3 +13,13 @@ Enhancement 1: Display the current applicationId and active lab room label (Comp
 Enhancement 2: Add a Clear Log button that resets the on-screen trace without crashing on screen rotation.
 
 Laboratory Discussion: Discuss what happens to Activity lifecycle states during screen rotation versus pressing the Home button, how Logcat helped verify state order, and what setup or Gradle sync issues you encountered.
+
+## Lab activity 2
+
+Enhancement 1: Add a button to switch between at least three sample stations (PC-07, PC-08, PC-09) before opening StationDetailActivity
+
+
+Enhancement 2: Use an implicit Intent (Intent.ACTION_VIEW or Intent.ACTION_DIAL) as a quick-support action for lab maintenance contact.
+
+
+Laboratory Discussion: Compare when to use ConstraintLayout, LinearLayout, and RelativeLayout, and explain the difference between explicit and implicit Intents in LabCheck.
