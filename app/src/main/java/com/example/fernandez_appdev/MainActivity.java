@@ -1,21 +1,53 @@
 package com.example.fernandez_appdev;
 
 import android.os.Bundle;
+
 import androidx.appcompat.app.AppCompatActivity;
-import android.util.Log;
-import androidx.annotation.NonNull;
+import android.content.Intent;
+import android.net.Uri;
+import android.widget.Toast;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import com.example.fernandez_appdev.databinding.ActivityMainBinding;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
+
 
 public class MainActivity extends AppCompatActivity {
+    public static final String EXTRA_STATION_CODE = "extra_station_code";
+    public static final String EXTRA_STATUS = "extra_status";
+    public static final String EXTRA_ISSUE_NOTE = "extra_issue_note";
 
-    private static final String TAG = "LabCheckLifecycle";
-    private static final String KEY_LOG ="key_lifecycle_log";
     private ActivityMainBinding binding;
-    private final StringBuilder traceBuilder = new StringBuilder();
+    private String currentCode = "PC-07";
+    private String currentStatus = "Needs Check";
+    private String currentNote = "Emulator slow to boot";
 
+
+    private final String[] stationCodes    = {"PC-07", "PC-08", "PC-09"};
+    private final String[] stationStatuses = {"Needs Check", "Ready", "Ready"};
+    private final String[] stationNotes    = {"Emulator slow to boot",
+            "No issues reported",
+            "No issues reported"};
+    private int stationIndex = 0;
+    private static final String SUPPORT_NUMBER = "69696969";
+
+
+    private final ActivityResultLauncher<Intent> detailLauncher =
+            registerForActivityResult(new
+                    ActivityResultContracts.StartActivityForResult(), result -> {
+                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                    currentStatus = result.getData().getStringExtra(EXTRA_STATUS);
+                    currentNote = result.getData().getStringExtra(EXTRA_ISSUE_NOTE);
+
+
+                    stationStatuses[stationIndex] = currentStatus;
+                    stationNotes[stationIndex] = currentNote;
+
+
+                    binding.tvStationStatus.setText(currentStatus);
+                    binding.tvStationSpec.setText("Note: " + currentNote);
+                    Toast.makeText(this, "Updated " + currentCode + " -> " + currentStatus, Toast.LENGTH_SHORT).show();
+                }
+            });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,67 +55,43 @@ public class MainActivity extends AppCompatActivity {
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        if (savedInstanceState != null) {
+        binding.btnInspectStation.setOnClickListener(v -> {
+            Intent intent = new Intent(this, StationDetailActivity.class);
+            intent.putExtra(EXTRA_STATION_CODE, currentCode);
+            intent.putExtra(EXTRA_STATUS, currentStatus);
+            intent.putExtra(EXTRA_ISSUE_NOTE, currentNote);
+            detailLauncher.launch(intent);
+        });
 
-            traceBuilder.append(savedInstanceState.getString(KEY_LOG, ""));
+        binding.btnShareReport.setOnClickListener(v -> {
+            Intent shareIntent = new Intent(Intent.ACTION_SEND);
+            shareIntent.setType("text/plain");
+            shareIntent.putExtra(Intent.EXTRA_SUBJECT, "LabCheck Report: " + currentCode);
+            shareIntent.putExtra(Intent.EXTRA_TEXT,
+                    "Station: " + currentCode + "\nStatus: " + currentStatus + "\nNote: " + currentNote);
+                    startActivity(Intent.createChooser(shareIntent, "Share Station Status"));
+        });
 
-        }
-        recordEvent("onCreate");
 
-        binding.btnSimulateTick.setOnClickListener(v ->
-                recordEvent("Manual check-in probe (pkg=" + getPackageName() + ")"));
+        binding.btnSwitchStation.setOnClickListener(v -> {
+            stationIndex = (stationIndex + 1) % stationCodes.length;
+            currentCode   = stationCodes[stationIndex];
+            currentStatus = stationStatuses[stationIndex];
+            currentNote   = stationNotes[stationIndex];
 
-        binding.btnClearLog.setOnClickListener(v -> {
-            traceBuilder.setLength(0);
-            binding.tvLifecycleLog.setText("Cleared by the user");
+            binding.tvStationCode.setText(currentCode + " • Android Studio SDK");
+            binding.tvStationStatus.setText(currentStatus);
+            binding.tvStationSpec.setText("Note: " + currentNote);
+            Toast.makeText(this, "Selected station: " + currentCode,
+                    Toast.LENGTH_SHORT).show();
+        });
+
+
+        binding.btnCallSupport.setOnClickListener(v -> {
+            Intent dialIntent = new Intent(Intent.ACTION_DIAL);
+            dialIntent.setData(Uri.parse("tel:" + SUPPORT_NUMBER));
+            startActivity(dialIntent);
         });
 
     }
-
-    @Override
-    protected void onStart(){
-        super.onStart();
-        recordEvent("onStart");
-    }
-
-    @Override
-    protected void onResume (){
-        super.onResume();
-        recordEvent("onResume");
-    }
-
-    @Override
-    protected void onPause (){
-        super.onPause();
-        recordEvent("onPause");
-
-    }
-    @Override
-    protected void onStop (){
-        super.onStop();
-        recordEvent("onStop");
-
-    }
-    @Override
-    protected void onDestroy (){
-        super.onDestroy();
-        recordEvent("onDestroy");
-
-    }
-    @Override
-    protected void onSaveInstanceState(@NonNull Bundle outState){
-        super.onSaveInstanceState(outState);
-        outState.putString(KEY_LOG, traceBuilder.toString());
-    }
-
-    private void recordEvent(String eventName){
-        String ts = new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date());
-        String line  = "[" + ts + "]" + eventName + "\n";
-        traceBuilder.append(line);
-        Log.d(TAG, line.trim());
-        if (binding != null){
-            binding.tvLifecycleLog.setText(traceBuilder.toString());
-        }
-    }
-
 }
